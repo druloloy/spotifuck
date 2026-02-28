@@ -36,7 +36,8 @@ async function spotifyFetch<T>(endpoint: string, options: RequestInit = {}): Pro
     },
   });
 
-  if (response.status === 204) {
+  // Handle no content responses
+  if (response.status === 204 || response.status === 202) {
     return null;
   }
 
@@ -45,7 +46,19 @@ async function spotifyFetch<T>(endpoint: string, options: RequestInit = {}): Pro
     throw new Error(`Spotify API error: ${response.status} - ${error}`);
   }
 
-  return response.json();
+  // Check if response has JSON content
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    // Non-JSON success response (e.g., queue endpoint returns snapshot_id as plain text)
+    return null;
+  }
+
+  const text = await response.text();
+  if (!text || text.trim() === '') {
+    return null;
+  }
+
+  return JSON.parse(text);
 }
 
 export async function searchTracks(query: string, limit = 10): Promise<Track[]> {
