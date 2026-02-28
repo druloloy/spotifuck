@@ -3,6 +3,7 @@ import { api } from '@lib/api';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [redirectUri, setRedirectUri] = useState<string>('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -19,7 +20,10 @@ export default function Admin() {
 
     // Check auth status
     api.getAuthStatus()
-      .then((status) => setIsAuthenticated(status.authenticated))
+      .then((status) => {
+        setIsAuthenticated(status.authenticated);
+        setRedirectUri(status.redirectUri || '');
+      })
       .catch(() => setIsAuthenticated(false));
   }, []);
 
@@ -92,7 +96,7 @@ export default function Admin() {
         <ol className="list-decimal list-inside space-y-2 text-[var(--spotify-light-gray)] text-sm">
           <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" className="text-[var(--spotify-green)] underline">Spotify Developer Dashboard</a></li>
           <li>Create a new app or use an existing one</li>
-          <li>Add <code className="bg-[var(--spotify-medium-gray)] px-1 rounded">http://localhost:5000/api/auth/callback</code> to Redirect URIs</li>
+          <li>Add <code className="bg-[var(--spotify-medium-gray)] px-1 rounded">{redirectUri || 'http://localhost:5000/api/auth/callback'}</code> to Redirect URIs</li>
           <li>Copy Client ID and Client Secret to your <code className="bg-[var(--spotify-medium-gray)] px-1 rounded">.env</code> file</li>
           <li>Restart the server and click "Connect with Spotify" above</li>
         </ol>

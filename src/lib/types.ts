@@ -28,6 +28,7 @@ export interface AppState {
 
 export interface AuthStatus {
   authenticated: boolean;
+  redirectUri?: string;
 }
 
 export interface SearchResponse {

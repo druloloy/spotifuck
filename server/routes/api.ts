@@ -70,7 +70,10 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
 });
 
 router.get('/auth/status', (req: Request, res: Response) => {
-  res.json({ authenticated: isAuthenticated() });
+  res.json({
+    authenticated: isAuthenticated(),
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI || '',
+  });
 });
 
 // ===== Search Routes =====
