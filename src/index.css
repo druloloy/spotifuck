@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+:root {
+  --spotify-green: #1DB954;
+  --spotify-green-hover: #1ed760;
+  --spotify-black: #191414;
+  --spotify-dark-gray: #282828;
+  --spotify-medium-gray: #404040;
+  --spotify-light-gray: #b3b3b3;
+  --spotify-white: #ffffff;
+}
+
+body {
+  background-color: var(--spotify-black);
+  color: var(--spotify-white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--spotify-dark-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--spotify-medium-gray);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--spotify-light-gray);
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: 2px;
+}
