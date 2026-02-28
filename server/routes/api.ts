@@ -15,7 +15,7 @@ import {
   addToQueue,
   isTrackInQueue,
 } from '../services/queueService.ts';
-import { rateLimiter, incrementRateLimit, getRateLimitInfo } from '../middleware/rateLimiter.ts';
+import { rateLimiter, incrementRateLimit, getRateLimitInfo, getClientIdentifier } from '../middleware/rateLimiter.ts';
 
 const router = Router();
 
@@ -168,11 +168,11 @@ router.post('/queue', rateLimiter, async (req: Request, res: Response) => {
     }
 
     // Add to local queue for display
-    const ip = req.ip || req.socket.remoteAddress || 'unknown';
-    const queueItem = addToQueue(track, ip);
-    incrementRateLimit(ip);
+    const clientId = getClientIdentifier(req);
+    const queueItem = addToQueue(track, clientId);
+    incrementRateLimit(clientId);
 
-    const info = getRateLimitInfo(ip);
+    const info = getRateLimitInfo(clientId);
     res.status(201).json({
       success: true,
       queueItem,

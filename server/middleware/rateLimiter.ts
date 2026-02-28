@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { RateLimitInfo } from '../types/index.ts';
-import { hashIP } from '../services/queueService.ts';
+import crypto from 'crypto';
 
 const RATE_LIMIT = 5; // songs
 const RATE_WINDOW = 10 * 60 * 1000; // 10 minutes in ms
@@ -17,8 +17,38 @@ setInterval(() => {
   }
 }, 60000); // Clean every minute
 
-export function getRateLimitInfo(ip: string): RateLimitInfo {
-  const key = hashIP(ip);
+function hashIdentifier(id: string): string {
+  return crypto.createHash('sha256').update(id).digest('hex').substring(0, 16);
+}
+
+export function getClientIdentifier(req: Request): string {
+  // Try X-Forwarded-For header first (for proxied requests)
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0].trim();
+    if (ip && ip !== '127.0.0.1' && ip !== '::1') {
+      return ip;
+    }
+  }
+
+  // Try X-Real-IP header
+  const realIp = req.headers['x-real-ip'];
+  if (realIp && typeof realIp === 'string') {
+    return realIp;
+  }
+
+  // Try custom client ID header (for development/testing)
+  const clientId = req.headers['x-client-id'];
+  if (clientId && typeof clientId === 'string') {
+    return clientId;
+  }
+
+  // Fall back to req.ip or socket address
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+export function getRateLimitInfo(identifier: string): RateLimitInfo {
+  const key = hashIdentifier(identifier);
   const now = Date.now();
   let info = rateLimitMap.get(key);
 
@@ -30,14 +60,14 @@ export function getRateLimitInfo(ip: string): RateLimitInfo {
   return info;
 }
 
-export function incrementRateLimit(ip: string): void {
-  const info = getRateLimitInfo(ip);
+export function incrementRateLimit(identifier: string): void {
+  const info = getRateLimitInfo(identifier);
   info.count++;
 }
 
 export function rateLimiter(req: Request, res: Response, next: NextFunction): void {
-  const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  const info = getRateLimitInfo(ip);
+  const clientId = getClientIdentifier(req);
+  const info = getRateLimitInfo(clientId);
 
   // Set rate limit headers
   res.setHeader('X-RateLimit-Limit', RATE_LIMIT);

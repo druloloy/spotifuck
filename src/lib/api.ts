@@ -10,6 +10,17 @@ import type {
 } from './types';
 
 const API_BASE = '/api';
+const CLIENT_ID_KEY = 'spotifuck_client_id';
+
+function getClientId(): string {
+  let clientId = localStorage.getItem(CLIENT_ID_KEY);
+  if (!clientId) {
+    // Generate a random client ID
+    clientId = crypto.randomUUID();
+    localStorage.setItem(CLIENT_ID_KEY, clientId);
+  }
+  return clientId;
+}
 
 class ApiClient {
   private async request<T>(
@@ -20,6 +31,7 @@ class ApiClient {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'X-Client-ID': getClientId(),
         ...options?.headers,
       },
     });
