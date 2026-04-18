@@ -88,68 +88,34 @@ async function scrapeAZLyrics(artist: string, title: string): Promise<LyricsResu
   }
 }
 
-// ── Source 3: Genius (search API + HTML scrape) ───────────────────────────────
+// ── Source 3: lrclib.net (free open API) ─────────────────────────────────────
 
-interface GeniusSearchHit {
-  result: {
-    url: string;
-    full_title: string;
-  };
+interface LrclibResponse {
+  id: number;
+  trackName: string;
+  artistName: string;
+  plainLyrics?: string;
+  syncedLyrics?: string;
 }
 
-interface GeniusSearchResponse {
-  meta: { status: number };
-  response: {
-    sections: Array<{
-      type: string;
-      hits: GeniusSearchHit[];
-    }>;
-  };
-}
-
-async function scrapeGenius(artist: string, title: string): Promise<LyricsResult | null> {
+async function fetchLrclib(artist: string, title: string): Promise<LyricsResult | null> {
   try {
-    const query = `${artist} ${title}`;
-    const searchUrl = `https://genius.com/api/search/multi?per_page=3&q=${encodeURIComponent(query)}`;
+    const params = new URLSearchParams({ artist_name: artist, track_name: title });
+    const url = `https://lrclib.net/api/get?${params}`;
 
-    const searchRes = await fetch(searchUrl, {
-      signal: AbortSignal.timeout(6000),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
-    if (!searchRes.ok) return null;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return null;
 
-    const searchData = await searchRes.json() as GeniusSearchResponse;
-    const songSection = searchData.response?.sections?.find((s) => s.type === 'song');
-    const firstHit = songSection?.hits?.[0];
-    if (!firstHit) return null;
+    const data = await res.json() as LrclibResponse;
 
-    const songUrl = firstHit.result.url;
-
-    // Fetch the song page and scrape lyrics
-    const songRes = await fetch(songUrl, {
-      signal: AbortSignal.timeout(8000),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
-    if (!songRes.ok) return null;
-
-    const html = await songRes.text();
-    const root = parse(html);
-
-    const containers = root.querySelectorAll('[data-lyrics-container="true"]');
-    if (!containers.length) return null;
-
-    const lyricsRaw = containers.map((el) => el.innerHTML).join('\n');
-    const lyrics = cleanLyrics(lyricsRaw);
-    if (!lyrics || lyrics.length < 50) return null;
+    // Prefer plain lyrics; fall back to synced lyrics stripped of timestamps
+    const raw = data.plainLyrics || data.syncedLyrics?.replace(/^\[\d+:\d+\.\d+\]\s?/gm, '');
+    if (!raw || raw.trim().length < 50) return null;
 
     return {
-      lyrics,
-      source: 'Genius',
-      sourceUrl: songUrl,
+      lyrics: raw.trim(),
+      source: 'lrclib.net',
+      sourceUrl: `https://lrclib.net`,
     };
   } catch {
     return null;
@@ -163,7 +129,7 @@ export async function getLyrics(artist: string, title: string): Promise<LyricsRe
   const results = await Promise.allSettled([
     fetchLyricsOvh(artist, title),
     scrapeAZLyrics(artist, title),
-    scrapeGenius(artist, title),
+    fetchLrclib(artist, title),
   ]);
 
   for (const result of results) {
