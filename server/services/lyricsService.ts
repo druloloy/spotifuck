@@ -1,30 +1,10 @@
-import { parse } from 'node-html-parser';
-
 export interface LyricsResult {
   lyrics: string;
   source: string;
   sourceUrl: string;
 }
 
-// Normalize strings for use in URLs
-function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-    .trim();
-}
-
-// Strip HTML tags and normalize whitespace from a lyrics string
-function cleanLyrics(raw: string): string {
-  return raw
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\[([^\]]+)\]/g, '[$1]') // keep [Verse], [Chorus] markers
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
-// ── Source 1: lyrics.ovh (free REST API) ──────────────────────────────────────
+// ── Source 1: lyrics.ovh (free REST API) ─────────────────────────────────────
 
 async function fetchLyricsOvh(artist: string, title: string): Promise<LyricsResult | null> {
   try {
@@ -38,49 +18,40 @@ async function fetchLyricsOvh(artist: string, title: string): Promise<LyricsResu
     return {
       lyrics: data.lyrics.trim(),
       source: 'lyrics.ovh',
-      sourceUrl: `https://lyrics.ovh`,
+      sourceUrl: 'https://lyrics.ovh',
     };
   } catch {
     return null;
   }
 }
 
-// ── Source 2: AZLyrics (HTML scrape) ─────────────────────────────────────────
+// ── Source 2: ChartLyrics (free XML API) ─────────────────────────────────────
 
-async function scrapeAZLyrics(artist: string, title: string): Promise<LyricsResult | null> {
+async function fetchChartLyrics(artist: string, title: string): Promise<LyricsResult | null> {
   try {
-    const artistSlug = slugify(artist.replace(/^the\s+/i, ''));
-    const titleSlug = slugify(title);
-    const url = `https://www.azlyrics.com/lyrics/${artistSlug}/${titleSlug}.html`;
+    const params = new URLSearchParams({ artist, song: title });
+    const url = `http://api.chartlyrics.com/apiv1.asmx/SearchLyricDirect?${params}`;
 
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return null;
 
-    const html = await res.text();
-    const root = parse(html);
+    const xml = await res.text();
 
-    // AZLyrics lyrics live in a classless <div> inside .col-xs-12.col-lg-8.text-center
-    const container = root.querySelector('.col-xs-12.col-lg-8');
-    if (!container) return null;
+    // Parse <Lyric> tag from the XML response
+    const match = xml.match(/<Lyric>([\s\S]*?)<\/Lyric>/);
+    if (!match || !match[1].trim()) return null;
 
-    const lyricsDivs = container.querySelectorAll('div');
-    const lyricsDiv = lyricsDivs.find(
-      (d) => !d.getAttribute('class') && !d.getAttribute('id') && d.innerHTML.length > 100
-    );
-    if (!lyricsDiv) return null;
+    const lyrics = match[1].trim();
+    if (lyrics.length < 50) return null;
 
-    const lyrics = cleanLyrics(lyricsDiv.innerHTML);
-    if (!lyrics || lyrics.length < 50) return null;
+    // Parse the song URL from <LyricUrl> for the source link
+    const urlMatch = xml.match(/<LyricUrl>([\s\S]*?)<\/LyricUrl>/);
+    const sourceUrl = urlMatch?.[1].trim() || 'http://www.chartlyrics.com';
 
     return {
       lyrics,
-      source: 'AZLyrics',
-      sourceUrl: url,
+      source: 'ChartLyrics',
+      sourceUrl,
     };
   } catch {
     return null;
@@ -107,14 +78,14 @@ async function fetchLrclib(artist: string, title: string): Promise<LyricsResult 
 
     const data = await res.json() as LrclibResponse;
 
-    // Prefer plain lyrics; fall back to synced lyrics stripped of timestamps
+    // Prefer plain lyrics; fall back to synced lyrics with timestamps stripped
     const raw = data.plainLyrics || data.syncedLyrics?.replace(/^\[\d+:\d+\.\d+\]\s?/gm, '');
     if (!raw || raw.trim().length < 50) return null;
 
     return {
       lyrics: raw.trim(),
       source: 'lrclib.net',
-      sourceUrl: `https://lrclib.net`,
+      sourceUrl: 'https://lrclib.net',
     };
   } catch {
     return null;
@@ -130,7 +101,7 @@ export async function getLyrics(artist: string, title: string): Promise<LyricsRe
   // Try all three sources concurrently, return the first that succeeds
   const results = await Promise.allSettled([
     fetchLyricsOvh(primaryArtist, title),
-    scrapeAZLyrics(primaryArtist, title),
+    fetchChartLyrics(primaryArtist, title),
     fetchLrclib(primaryArtist, title),
   ]);
 
