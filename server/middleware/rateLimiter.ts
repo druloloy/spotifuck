@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { RateLimitInfo } from '../types/index.ts';
 import crypto from 'crypto';
 
-const RATE_LIMIT = 5; // songs
+export const RATE_LIMIT = 5; // songs
 const RATE_WINDOW = 10 * 60 * 1000; // 10 minutes in ms
 
 const rateLimitMap = new Map<string, RateLimitInfo>();
