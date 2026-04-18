@@ -5,6 +5,7 @@ import type { AppState } from '@lib/types';
 import SearchBar from '@components/SearchBar';
 import NowPlaying from '@components/NowPlaying';
 import QueueList from '@components/QueueList';
+import Lyrics from '@components/Lyrics';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -65,13 +66,14 @@ export default function Home() {
     <main className="max-w-6xl mx-auto px-4 py-6">
       {/* Desktop Layout */}
       <div className="hidden md:grid md:grid-cols-2 gap-6 h-[calc(100vh-120px)]">
-        {/* Left Column - Search */}
-        <div className="flex flex-col gap-4">
+        {/* Left Column - Search + Lyrics */}
+        <div className="flex flex-col gap-4 overflow-hidden">
           <h2 className="text-lg font-semibold">Search & Queue</h2>
           <SearchBar onTrackAdded={handleTrackAdded} />
           <p className="text-[var(--spotify-light-gray)] text-sm">
             Search for songs to add to the queue. Rate limit: 5 songs per 10 minutes.
           </p>
+          <Lyrics track={state?.nowPlaying?.track ?? null} />
         </div>
 
         {/* Right Column - Now Playing & Queue */}
@@ -99,6 +101,8 @@ export default function Home() {
           <h2 className="text-lg font-semibold">Search & Queue</h2>
           <SearchBar onTrackAdded={handleTrackAdded} />
         </div>
+
+        <Lyrics track={state?.nowPlaying?.track ?? null} />
 
         <QueueList
           spotifyQueue={state?.spotifyQueue || []}
