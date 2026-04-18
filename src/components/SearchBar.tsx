@@ -68,7 +68,7 @@ export default function SearchBar({ onTrackAdded }: SearchBarProps) {
           onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           placeholder="Search for a song..."
-          className="w-full px-4 py-3 bg-white text-black rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--spotify-green)] text-sm"
+          className="w-full px-4 py-3 bg-[var(--spotify-white)] text-[var(--spotify-black)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--spotify-green)] text-sm"
         />
         {isLoading && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
