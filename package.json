@@ -13,7 +13,6 @@
   "dependencies": {
     "cors": "^2.8.6",
     "helmet": "^8.1.0",
-    "node-html-parser": "^7.1.0",
     "preact": "^10.27.2",
     "preact-iso": "^2.11.1"
   },

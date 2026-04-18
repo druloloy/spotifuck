@@ -6,6 +6,7 @@ A web app that lets office users search and queue songs anonymously, while the h
 
 - **Anonymous Song Queuing**: Users can search and add songs to the queue without logging in
 - **Real-time Updates**: Now playing and queue status update every 5 seconds
+- **Lyrics**: Automatically fetches lyrics for the currently playing song from multiple sources
 - **Rate Limiting**: 5 songs per 10 minutes per user to prevent spam
 - **Responsive Design**: Works on desktop and mobile devices
 - **Spotify Integration**: Direct integration with Spotify's playback queue
@@ -92,7 +93,10 @@ spotifuck/
 │   ├── services/
 │   │   ├── spotifyService.ts   # Spotify API wrapper
 │   │   ├── tokenService.ts     # OAuth token management
-│   │   └── queueService.ts     # In-memory queue
+│   │   ├── queueService.ts     # In-memory queue
+│   │   └── lyricsService.ts    # Lyrics fetching (3 sources)
+│   ├── tests/
+│   │   └── lyrics.test.ts      # Lyrics scraper test runner
 │   ├── middleware/
 │   │   └── rateLimiter.ts  # IP-based rate limiting
 │   ├── types/
@@ -106,7 +110,8 @@ spotifuck/
 │   │   ├── SearchResults.tsx
 │   │   ├── TrackCard.tsx
 │   │   ├── NowPlaying.tsx
-│   │   └── QueueList.tsx
+│   │   ├── QueueList.tsx
+│   │   └── Lyrics.tsx          # Lyrics display with source attribution
 │   ├── pages/
 │   │   ├── home.tsx        # Main player UI
 │   │   └── admin.tsx       # Spotify setup
@@ -136,6 +141,24 @@ spotifuck/
 | GET | `/api/queue` | Get song queue |
 | POST | `/api/queue` | Add song to queue |
 | GET | `/api/state` | Combined now-playing + queue |
+| GET | `/api/lyrics?artist=&title=` | Fetch lyrics for a track |
+
+## Lyrics
+
+Lyrics are fetched automatically for the currently playing song from three sources in priority order:
+
+| # | Source | Method |
+|---|--------|--------|
+| 1 | [lyrics.ovh](https://lyrics.ovh) | Free REST API |
+| 2 | [ChartLyrics](http://www.chartlyrics.com) | Free XML API |
+| 3 | [lrclib.net](https://lrclib.net) | Free open API |
+
+All three are queried concurrently and the first successful result is used. If none have the song, a "lyrics unavailable" message is shown. The source and link are displayed at the bottom of the lyrics panel.
+
+To test the lyrics scrapers manually:
+```bash
+npx tsx server/tests/lyrics.test.ts
+```
 
 ## Rate Limiting
 
