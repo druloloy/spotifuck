@@ -16,6 +16,7 @@ import {
   isTrackInQueue,
 } from '../services/queueService.ts';
 import { rateLimiter, incrementRateLimit, getRateLimitInfo, getClientIdentifier } from '../middleware/rateLimiter.ts';
+import { getLyrics } from '../services/lyricsService.ts';
 
 const router = Router();
 
@@ -208,6 +209,29 @@ router.get('/state', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('State error:', error);
     res.status(500).json({ error: 'Failed to fetch state' });
+  }
+});
+
+// ===== Lyrics Route =====
+
+router.get('/lyrics', async (req: Request, res: Response) => {
+  const { artist, title } = req.query;
+
+  if (!artist || typeof artist !== 'string' || !title || typeof title !== 'string') {
+    res.status(400).json({ error: 'artist and title query params are required' });
+    return;
+  }
+
+  try {
+    const result = await getLyrics(artist.trim(), title.trim());
+    if (!result) {
+      res.json({ lyrics: null, source: null, sourceUrl: null });
+      return;
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('Lyrics error:', error);
+    res.status(500).json({ error: 'Failed to fetch lyrics' });
   }
 });
 

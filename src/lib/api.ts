@@ -6,6 +6,7 @@ import type {
   QueueResponse,
   AppState,
   AddToQueueResponse,
+  LyricsResult,
   ApiError,
 } from './types';
 
@@ -75,6 +76,12 @@ class ApiClient {
 
   async getState(): Promise<AppState> {
     return this.request<AppState>('/state');
+  }
+
+  async getLyrics(artist: string, title: string): Promise<LyricsResult> {
+    return this.request<LyricsResult>(
+      `/lyrics?artist=${encodeURIComponent(artist)}&title=${encodeURIComponent(title)}`
+    );
   }
 }
 

@@ -46,6 +46,12 @@ export interface AddToQueueResponse {
   rateLimitRemaining: number;
 }
 
+export interface LyricsResult {
+  lyrics: string | null;
+  source: string | null;
+  sourceUrl: string | null;
+}
+
 export interface ApiError {
   error: string;
   message?: string;
