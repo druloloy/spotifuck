@@ -49,7 +49,6 @@ async function fetchLyricsOvh(artist: string, title: string): Promise<LyricsResu
 
 async function scrapeAZLyrics(artist: string, title: string): Promise<LyricsResult | null> {
   try {
-    // AZLyrics removes "a" prefix for artists starting with it, and strips "the"
     const artistSlug = slugify(artist.replace(/^the\s+/i, ''));
     const titleSlug = slugify(title);
     const url = `https://www.azlyrics.com/lyrics/${artistSlug}/${titleSlug}.html`;
@@ -125,11 +124,14 @@ async function fetchLrclib(artist: string, title: string): Promise<LyricsResult 
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function getLyrics(artist: string, title: string): Promise<LyricsResult | null> {
+  // Normalize to primary artist only — Spotify returns "Artist1, Artist2" for collabs
+  const primaryArtist = artist.split(/,|feat\.|ft\.|&/i)[0].trim();
+
   // Try all three sources concurrently, return the first that succeeds
   const results = await Promise.allSettled([
-    fetchLyricsOvh(artist, title),
-    scrapeAZLyrics(artist, title),
-    fetchLrclib(artist, title),
+    fetchLyricsOvh(primaryArtist, title),
+    scrapeAZLyrics(primaryArtist, title),
+    fetchLrclib(primaryArtist, title),
   ]);
 
   for (const result of results) {
