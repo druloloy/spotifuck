@@ -22,7 +22,14 @@ function hashIdentifier(id: string): string {
 }
 
 export function getClientIdentifier(req: Request): string {
-  // Try X-Forwarded-For header first (for proxied requests)
+  // Prefer browser-generated client ID — unique per browser session,
+  // avoids shared-IP collisions in office/NAT environments
+  const clientId = req.headers['x-client-id'];
+  if (clientId && typeof clientId === 'string') {
+    return clientId;
+  }
+
+  // Fall back to X-Forwarded-For for non-browser clients
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) {
     const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0].trim();
@@ -31,19 +38,12 @@ export function getClientIdentifier(req: Request): string {
     }
   }
 
-  // Try X-Real-IP header
+  // Fall back to X-Real-IP
   const realIp = req.headers['x-real-ip'];
   if (realIp && typeof realIp === 'string') {
     return realIp;
   }
 
-  // Try custom client ID header (for development/testing)
-  const clientId = req.headers['x-client-id'];
-  if (clientId && typeof clientId === 'string') {
-    return clientId;
-  }
-
-  // Fall back to req.ip or socket address
   return req.ip || req.socket.remoteAddress || 'unknown';
 }
 
