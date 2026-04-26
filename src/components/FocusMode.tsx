@@ -1,5 +1,6 @@
 import type { AppState } from '@lib/types';
 import { formatDuration } from '@lib/api';
+import { useFocusMode } from '@lib/focusContext';
 
 interface FocusModeProps {
   state: AppState | null;
@@ -8,6 +9,7 @@ interface FocusModeProps {
 }
 
 export default function FocusMode({ state, loading }: FocusModeProps) {
+  const { toggleFocusMode } = useFocusMode();
   const nowPlaying = state?.nowPlaying ?? null;
   const track = nowPlaying?.track ?? null;
   const nextTrack = state?.spotifyQueue?.[0] ?? state?.localQueue?.[0]?.track ?? null;
@@ -17,6 +19,16 @@ export default function FocusMode({ state, loading }: FocusModeProps) {
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[var(--spotify-black)]">
+      {/* Exit button */}
+      <div className="flex justify-end px-6 pt-5">
+        <button
+          onClick={toggleFocusMode}
+          className="text-sm text-[var(--spotify-light-gray)] hover:text-white transition-colors"
+        >
+          Exit focus
+        </button>
+      </div>
+
       {/* Main content — vertically centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 md:px-16">
         <div className="w-full max-w-lg">

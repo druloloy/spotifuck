@@ -3,6 +3,8 @@ import { useFocusMode } from '@lib/focusContext';
 export default function Header() {
   const { isFocusMode, toggleFocusMode } = useFocusMode();
 
+  if (isFocusMode) return null;
+
   return (
     <nav className="bg-[var(--spotify-dark-gray)] border-b border-[var(--spotify-medium-gray)] relative z-50">
       <div className="flex justify-between items-center max-w-6xl mx-auto px-4 py-3">
