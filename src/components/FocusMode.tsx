@@ -1,7 +1,5 @@
-import { useState } from 'preact/hooks';
 import type { AppState } from '@lib/types';
 import { formatDuration } from '@lib/api';
-import SearchBar from './SearchBar';
 
 interface FocusModeProps {
   state: AppState | null;
@@ -9,9 +7,7 @@ interface FocusModeProps {
   onTrackAdded: () => void;
 }
 
-export default function FocusMode({ state, loading, onTrackAdded }: FocusModeProps) {
-  const [showSearch, setShowSearch] = useState(false);
-
+export default function FocusMode({ state, loading }: FocusModeProps) {
   const nowPlaying = state?.nowPlaying ?? null;
   const track = nowPlaying?.track ?? null;
   const nextTrack = state?.spotifyQueue?.[0] ?? state?.localQueue?.[0]?.track ?? null;
@@ -79,26 +75,6 @@ export default function FocusMode({ state, loading, onTrackAdded }: FocusModePro
         </div>
       </div>
 
-      {/* Bottom bar — search toggle */}
-      <div className="px-8 md:px-16 pb-8 flex flex-col items-start w-full max-w-lg mx-auto gap-4">
-        {showSearch && (
-          <div className="w-full">
-            <SearchBar
-              onTrackAdded={() => {
-                onTrackAdded();
-                setShowSearch(false);
-              }}
-            />
-          </div>
-        )}
-
-        <button
-          onClick={() => setShowSearch((s) => !s)}
-          className="text-sm text-[var(--spotify-light-gray)] hover:text-white transition-colors"
-        >
-          {showSearch ? 'Cancel' : '+ Add a song'}
-        </button>
-      </div>
     </div>
   );
 }
