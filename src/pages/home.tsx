@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { api } from '@lib/api';
 import { usePolling } from '@hooks/usePolling';
+import { useFocusMode } from '@lib/focusContext';
 import type { AppState } from '@lib/types';
 import SearchBar from '@components/SearchBar';
 import NowPlaying from '@components/NowPlaying';
 import QueueList from '@components/QueueList';
 import Lyrics from '@components/Lyrics';
+import FocusMode from '@components/FocusMode';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { isFocusMode } = useFocusMode();
 
-  // Check auth status on mount
   useEffect(() => {
     api.getAuthStatus()
       .then((status) => setIsAuthenticated(status.authenticated))
@@ -31,7 +33,6 @@ export default function Home() {
     refetch();
   };
 
-  // Loading auth status
   if (isAuthenticated === null) {
     return (
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -42,7 +43,6 @@ export default function Home() {
     );
   }
 
-  // Not authenticated
   if (!isAuthenticated) {
     return (
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -59,6 +59,16 @@ export default function Home() {
           </a>
         </div>
       </main>
+    );
+  }
+
+  if (isFocusMode) {
+    return (
+      <FocusMode
+        state={state ?? null}
+        loading={loading && !state}
+        onTrackAdded={handleTrackAdded}
+      />
     );
   }
 
