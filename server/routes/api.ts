@@ -15,7 +15,7 @@ import {
   addToQueue,
   isTrackInQueue,
 } from '../services/queueService.ts';
-import { rateLimiter, incrementRateLimit, getRateLimitInfo, getClientIdentifier } from '../middleware/rateLimiter.ts';
+import { rateLimiter, incrementRateLimit, getRateLimitInfo, getClientIdentifier, RATE_LIMIT } from '../middleware/rateLimiter.ts';
 import { getLyrics } from '../services/lyricsService.ts';
 
 const router = Router();
@@ -177,7 +177,8 @@ router.post('/queue', rateLimiter, async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       queueItem,
-      rateLimitRemaining: 5 - info.count,
+      rateLimitRemaining: RATE_LIMIT - info.count,
+      rateLimitResetAt: info.resetAt,
     });
   } catch (error) {
     console.error('Add to queue error:', error);

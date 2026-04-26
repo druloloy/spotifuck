@@ -2,48 +2,36 @@ import { Request, Response, NextFunction } from 'express';
 import { RateLimitInfo } from '../types/index.ts';
 import crypto from 'crypto';
 
-const RATE_LIMIT = 10; // songs
-const RATE_WINDOW = 5 * 60 * 1000; // 5 minutes in ms
+export const RATE_LIMIT = 5; // songs
+const RATE_WINDOW = 10 * 60 * 1000; // 10 minutes in ms
 
 const rateLimitMap = new Map<string, RateLimitInfo>();
 
-// Clean up old entries periodically
 setInterval(() => {
   const now = Date.now();
   for (const [key, info] of rateLimitMap.entries()) {
-    if (info.resetAt <= now) {
-      rateLimitMap.delete(key);
-    }
+    if (info.resetAt <= now) rateLimitMap.delete(key);
   }
-}, 60000); // Clean every minute
+}, 60000);
 
 function hashIdentifier(id: string): string {
   return crypto.createHash('sha256').update(id).digest('hex').substring(0, 16);
 }
 
 export function getClientIdentifier(req: Request): string {
-  // Try X-Forwarded-For header first (for proxied requests)
+  // Prefer browser-generated UUID so office users behind NAT get individual limits
+  const clientId = req.headers['x-client-id'];
+  if (clientId && typeof clientId === 'string') return clientId;
+
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) {
     const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0].trim();
-    if (ip && ip !== '127.0.0.1' && ip !== '::1') {
-      return ip;
-    }
+    if (ip && ip !== '127.0.0.1' && ip !== '::1') return ip;
   }
 
-  // Try X-Real-IP header
   const realIp = req.headers['x-real-ip'];
-  if (realIp && typeof realIp === 'string') {
-    return realIp;
-  }
+  if (realIp && typeof realIp === 'string') return realIp;
 
-  // Try custom client ID header (for development/testing)
-  const clientId = req.headers['x-client-id'];
-  if (clientId && typeof clientId === 'string') {
-    return clientId;
-  }
-
-  // Fall back to req.ip or socket address
   return req.ip || req.socket.remoteAddress || 'unknown';
 }
 
@@ -61,15 +49,13 @@ export function getRateLimitInfo(identifier: string): RateLimitInfo {
 }
 
 export function incrementRateLimit(identifier: string): void {
-  const info = getRateLimitInfo(identifier);
-  info.count++;
+  getRateLimitInfo(identifier).count++;
 }
 
 export function rateLimiter(req: Request, res: Response, next: NextFunction): void {
   const clientId = getClientIdentifier(req);
   const info = getRateLimitInfo(clientId);
 
-  // Set rate limit headers
   res.setHeader('X-RateLimit-Limit', RATE_LIMIT);
   res.setHeader('X-RateLimit-Remaining', Math.max(0, RATE_LIMIT - info.count));
   res.setHeader('X-RateLimit-Reset', Math.ceil(info.resetAt / 1000));

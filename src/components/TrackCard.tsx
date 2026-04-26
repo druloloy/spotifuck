@@ -7,6 +7,7 @@ interface TrackCardProps {
   showAddButton?: boolean;
   isAdding?: boolean;
   compact?: boolean;
+  index?: number;
 }
 
 export default function TrackCard({
@@ -15,32 +16,53 @@ export default function TrackCard({
   showAddButton = false,
   isAdding = false,
   compact = false,
+  index,
 }: TrackCardProps) {
-  const imageSize = compact ? 'w-10 h-10' : 'w-12 h-12';
-
   return (
-    <div className={`flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--spotify-dark-gray)] transition-colors ${compact ? 'py-1' : ''}`}>
+    <div
+      className="flex items-center gap-3 p-2 transition-colors"
+      style={{ borderBottom: '1px solid var(--border)' }}
+    >
+      {index !== undefined && (
+        <span
+          className="font-mono text-[10px] w-5 flex-shrink-0 text-right"
+          style={{ color: 'var(--bone-dim)' }}
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      )}
+
       <img
         src={track.albumArt || '/placeholder.png'}
         alt={track.album}
-        className={`${imageSize} rounded object-cover flex-shrink-0`}
+        className={`${compact ? 'w-8 h-8' : 'w-10 h-10'} object-cover flex-shrink-0`}
+        style={{ outline: '1px solid var(--border)' }}
       />
+
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-medium truncate">{track.name}</p>
-        <p className="text-[var(--spotify-light-gray)] text-xs truncate">
+        <p className="text-sm font-medium truncate" style={{ color: 'var(--bone)' }}>
+          {track.name}
+        </p>
+        <p className="text-xs truncate" style={{ color: 'var(--bone-dim)' }}>
           {track.artist}
         </p>
       </div>
-      <span className="text-[var(--spotify-light-gray)] text-xs flex-shrink-0">
+
+      <span className="font-mono text-[10px] flex-shrink-0" style={{ color: 'var(--bone-dim)' }}>
         {formatDuration(track.duration)}
       </span>
+
       {showAddButton && onAdd && (
         <button
           onClick={() => onAdd(track)}
           disabled={isAdding}
-          className="flex-shrink-0 px-3 py-1 bg-[var(--spotify-green)] text-black text-sm font-semibold rounded-full hover:bg-[var(--spotify-green-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-shrink-0 px-3 py-1 font-mono text-xs font-bold tracking-wider shadow-brass-sm btn-press transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: 'var(--brass)',
+            color: 'var(--ink)',
+          }}
         >
-          {isAdding ? '...' : '+'}
+          {isAdding ? '···' : '+ ADD'}
         </button>
       )}
     </div>

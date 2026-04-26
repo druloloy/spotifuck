@@ -9,12 +9,7 @@ interface SearchResultsProps {
   onClose: () => void;
 }
 
-export default function SearchResults({
-  results,
-  onAdd,
-  addingTrackId,
-  onClose,
-}: SearchResultsProps) {
+export default function SearchResults({ results, onAdd, addingTrackId, onClose }: SearchResultsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,16 +18,10 @@ export default function SearchResults({
         onClose();
       }
     };
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
@@ -44,12 +33,18 @@ export default function SearchResults({
   return (
     <div
       ref={containerRef}
-      className="absolute top-full left-0 right-0 mt-2 bg-[var(--spotify-dark-gray)] rounded-lg shadow-xl max-h-80 overflow-y-auto z-50"
+      className="absolute top-full left-0 right-0 mt-0 max-h-80 overflow-y-auto z-50 shadow-brass"
+      style={{
+        backgroundColor: 'var(--panel)',
+        border: '1.5px solid var(--bone)',
+        borderTop: 'none',
+      }}
     >
-      {results.map((track) => (
+      {results.map((track, i) => (
         <TrackCard
           key={track.id}
           track={track}
+          index={i}
           onAdd={onAdd}
           showAddButton
           isAdding={addingTrackId === track.id}

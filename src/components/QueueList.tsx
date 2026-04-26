@@ -8,19 +8,24 @@ interface QueueListProps {
 }
 
 export default function QueueList({ spotifyQueue, localQueue, loading }: QueueListProps) {
+  const cardStyle = {
+    backgroundColor: 'var(--panel)',
+    border: '1.5px solid var(--border)',
+  };
+
   if (loading) {
     return (
-      <div className="bg-[var(--spotify-dark-gray)] rounded-lg p-4">
-        <h2 className="text-sm font-semibold text-[var(--spotify-light-gray)] mb-3">
-          QUEUE
-        </h2>
-        <div className="space-y-2">
+      <div style={cardStyle} className="p-4 flex-1">
+        <p className="font-mono text-[10px] tracking-widest mb-4" style={{ color: 'var(--bone-dim)' }}>
+          // QUEUE
+        </p>
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse flex items-center gap-3 p-2">
-              <div className="w-10 h-10 bg-[var(--spotify-medium-gray)] rounded" />
-              <div className="flex-1">
-                <div className="h-3 bg-[var(--spotify-medium-gray)] rounded w-3/4 mb-1" />
-                <div className="h-2 bg-[var(--spotify-medium-gray)] rounded w-1/2" />
+            <div key={i} className="animate-pulse flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="w-8 h-8 flex-shrink-0" style={{ backgroundColor: 'var(--border)' }} />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-3/4" style={{ backgroundColor: 'var(--border)' }} />
+                <div className="h-2 w-1/2" style={{ backgroundColor: 'var(--border)' }} />
               </div>
             </div>
           ))}
@@ -29,24 +34,29 @@ export default function QueueList({ spotifyQueue, localQueue, loading }: QueueLi
     );
   }
 
-  const hasQueue = spotifyQueue.length > 0 || localQueue.length > 0;
+  const total = spotifyQueue.length + localQueue.length;
 
   return (
-    <div className="bg-[var(--spotify-dark-gray)] rounded-lg p-4 flex-1 overflow-hidden flex flex-col">
-      <h2 className="text-sm font-semibold text-[var(--spotify-light-gray)] mb-3">
-        QUEUE {hasQueue && `(${spotifyQueue.length})`}
-      </h2>
+    <div style={cardStyle} className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+        <p className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--bone-dim)' }}>
+          // QUEUE
+        </p>
+        {total > 0 && (
+          <span className="font-mono text-[10px]" style={{ color: 'var(--brass)' }}>
+            {String(total).padStart(2, '0')} TRACKS
+          </span>
+        )}
+      </div>
 
-      {!hasQueue ? (
-        <p className="text-[var(--spotify-light-gray)] text-sm">
-          Queue is empty. Search and add some songs!
+      {total === 0 ? (
+        <p className="px-4 py-4 font-mono text-xs" style={{ color: 'var(--bone-dim)' }}>
+          QUEUE IS EMPTY.
         </p>
       ) : (
-        <div className="overflow-y-auto flex-1 -mr-2 pr-2">
-          {spotifyQueue.map((track, index) => (
-            <div key={`${track.id}-${index}`} className="relative">
-              <TrackCard track={track} compact />
-            </div>
+        <div className="overflow-y-auto flex-1 px-2 py-2">
+          {spotifyQueue.map((track, i) => (
+            <TrackCard key={`${track.id}-${i}`} track={track} index={i} compact />
           ))}
         </div>
       )}

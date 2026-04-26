@@ -44,6 +44,7 @@ export interface AddToQueueResponse {
   success: boolean;
   queueItem: QueueItem;
   rateLimitRemaining: number;
+  rateLimitResetAt: number;
 }
 
 export interface LyricsResult {

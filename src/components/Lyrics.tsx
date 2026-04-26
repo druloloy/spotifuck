@@ -12,12 +12,7 @@ export default function Lyrics({ track }: LyricsProps) {
   const lastTrackId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!track) {
-      setResult(null);
-      return;
-    }
-
-    // Don't re-fetch for the same track
+    if (!track) { setResult(null); return; }
     if (track.id === lastTrackId.current) return;
     lastTrackId.current = track.id;
 
@@ -33,39 +28,42 @@ export default function Lyrics({ track }: LyricsProps) {
   if (!track) return null;
 
   return (
-    <div className="bg-[var(--spotify-dark-gray)] rounded-lg p-4 flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-[var(--spotify-light-gray)]">LYRICS</h2>
-
-      {loading ? (
-        <div className="flex items-center gap-2 text-[var(--spotify-light-gray)] text-sm py-4">
-          <div className="w-4 h-4 border-2 border-[var(--spotify-green)] border-t-transparent rounded-full animate-spin flex-shrink-0" />
-          Fetching lyrics…
-        </div>
-      ) : !result?.lyrics ? (
-        <p className="text-[var(--spotify-light-gray)] text-sm italic py-2">
-          Lyrics unavailable for this track.
+    <div
+      className="flex flex-col gap-3 overflow-hidden flex-1"
+      style={{ backgroundColor: 'var(--panel)', border: '1.5px solid var(--border)' }}
+    >
+      <div
+        className="flex items-center justify-between px-4 pt-4 pb-3"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        <p className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--bone-dim)' }}>
+          // LYRICS
         </p>
-      ) : (
-        <>
-          <pre className="text-sm text-white whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto pr-1">
+        {result?.source && (
+          <span className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--bone-dim)' }}>
+            SRC · {result.source.toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      <div className="px-4 pb-4 overflow-y-auto flex-1">
+        {loading ? (
+          <p className="font-mono text-[10px] tracking-widest animate-pulse" style={{ color: 'var(--bone-dim)' }}>
+            // FETCHING···
+          </p>
+        ) : !result?.lyrics ? (
+          <p className="font-mono text-xs" style={{ color: 'var(--bone-dim)' }}>
+            LYRICS UNAVAILABLE.
+          </p>
+        ) : (
+          <pre
+            className="text-sm whitespace-pre-wrap leading-relaxed"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--bone)' }}
+          >
             {result.lyrics}
           </pre>
-
-          {result.source && result.sourceUrl && (
-            <p className="text-xs text-[var(--spotify-light-gray)] border-t border-[var(--spotify-medium-gray)] pt-3 mt-1">
-              Source:{' '}
-              <a
-                href={result.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--spotify-green)] hover:underline"
-              >
-                {result.source}
-              </a>
-            </p>
-          )}
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
