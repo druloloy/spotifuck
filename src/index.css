@@ -35,6 +35,20 @@ body {
   background: var(--spotify-light-gray);
 }
 
+/* Focus mode transitions */
+@keyframes focus-enter {
+  from { opacity: 0; transform: scale(1.03); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes focus-exit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.03); }
+}
+
+.animate-focus-enter { animation: focus-enter 300ms ease-out forwards; }
+.animate-focus-exit  { animation: focus-exit  280ms ease-in  forwards; }
+
 /* Focus styles for accessibility */
 *:focus-visible {
   outline: 2px solid var(--spotify-green);

@@ -1,3 +1,4 @@
+import { useState } from 'preact/hooks';
 import type { AppState } from '@lib/types';
 import { formatDuration } from '@lib/api';
 import { useFocusMode } from '@lib/focusContext';
@@ -10,6 +11,12 @@ interface FocusModeProps {
 
 export default function FocusMode({ state, loading }: FocusModeProps) {
   const { toggleFocusMode } = useFocusMode();
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleExit = () => {
+    setIsExiting(true);
+    setTimeout(toggleFocusMode, 280);
+  };
   const nowPlaying = state?.nowPlaying ?? null;
   const track = nowPlaying?.track ?? null;
   const nextTrack = state?.spotifyQueue?.[0] ?? state?.localQueue?.[0]?.track ?? null;
@@ -18,11 +25,11 @@ export default function FocusMode({ state, loading }: FocusModeProps) {
     : 0;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[var(--spotify-black)]">
+    <div className={`fixed inset-0 z-40 flex flex-col bg-[var(--spotify-black)] ${isExiting ? 'animate-focus-exit' : 'animate-focus-enter'}`}>
       {/* Exit button */}
       <div className="flex justify-end px-6 pt-5">
         <button
-          onClick={toggleFocusMode}
+          onClick={handleExit}
           className="text-sm text-[var(--spotify-light-gray)] hover:text-white transition-colors"
         >
           Exit focus
